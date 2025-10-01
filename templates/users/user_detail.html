@@ -1,0 +1,160 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ user.get_full_name|default:user.username }} - NikJin CRUD{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-4 mb-4">
+        <div class="card">
+            <div class="card-body text-center">
+                {% if profile.profile_picture %}
+                    <img src="{{ profile.profile_picture.url }}" alt="Profile Picture" 
+                         class="rounded-circle mb-3" width="150" height="150" style="object-fit: cover;">
+                {% else %}
+                    <div class="bg-secondary rounded-circle mx-auto mb-3 d-flex align-items-center justify-content-center" 
+                         style="width: 150px; height: 150px;">
+                        <i class="fas fa-user fa-4x text-white"></i>
+                    </div>
+                {% endif %}
+                
+                <h4>{{ user.get_full_name|default:user.username }}</h4>
+                <p class="text-muted">{{ user.email }}</p>
+                
+                {% if profile.phone %}
+                    <p class="text-muted">
+                        <i class="fas fa-phone me-2"></i>{{ profile.phone }}
+                    </p>
+                {% endif %}
+                
+                {% if profile.address %}
+                    <p class="text-muted">
+                        <i class="fas fa-map-marker-alt me-2"></i>{{ profile.address }}
+                    </p>
+                {% endif %}
+                
+                <div class="row text-center mt-4">
+                    <div class="col">
+                        <h5>{{ user_tasks.count }}</h5>
+                        <small class="text-muted">Tasks Assigned</small>
+                    </div>
+                    <div class="col">
+                        <h5>{{ user_projects.count }}</h5>
+                        <small class="text-muted">Projects</small>
+                    </div>
+                </div>
+            </div>
+            <div class="card-footer text-center">
+                <small class="text-muted">
+                    Member since {{ user.date_joined|date:"F Y" }}
+                </small>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-8">
+        <!-- User Tasks -->
+        <div class="card mb-4">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-tasks me-2"></i>Recent Tasks
+                </h5>
+                <a href="{% url 'task_list' %}?assigned_to={{ user.id }}" class="btn btn-sm btn-outline-primary">
+                    View All
+                </a>
+            </div>
+            <div class="card-body">
+                {% if user_tasks %}
+                    <div class="list-group list-group-flush">
+                        {% for task in user_tasks %}
+                            <div class="list-group-item border-0 px-0">
+                                <div class="d-flex justify-content-between align-items-start">
+                                    <div>
+                                        <h6 class="mb-1">
+                                            <a href="{% url 'task_detail' task.pk %}" class="text-decoration-none">
+                                                {{ task.title }}
+                                            </a>
+                                        </h6>
+                                        <p class="mb-1 text-muted small">{{ task.description|truncatewords:15 }}</p>
+                                        <small class="text-muted">{{ task.created_at|timesince }} ago</small>
+                                    </div>
+                                    <div class="text-end">
+                                        <span class="badge bg-{{ task.priority|yesno:'danger,warning,success' }} mb-1">
+                                            {{ task.get_priority_display }}
+                                        </span>
+                                        <br>
+                                        <span class="badge bg-{{ task.status|yesno:'success,warning,secondary' }}">
+                                            {{ task.get_status_display }}
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <p class="text-muted">No tasks assigned to this user.</p>
+                {% endif %}
+            </div>
+        </div>
+        
+        <!-- User Projects -->
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-project-diagram me-2"></i>Projects
+                </h5>
+                <a href="{% url 'project_list' %}" class="btn btn-sm btn-outline-success">
+                    View All
+                </a>
+            </div>
+            <div class="card-body">
+                {% if user_projects %}
+                    <div class="list-group list-group-flush">
+                        {% for project in user_projects %}
+                            <div class="list-group-item border-0 px-0">
+                                <div class="d-flex justify-content-between align-items-start">
+                                    <div>
+                                        <h6 class="mb-1">
+                                            <a href="{% url 'project_detail' project.pk %}" class="text-decoration-none">
+                                                {{ project.name }}
+                                            </a>
+                                        </h6>
+                                        <p class="mb-1 text-muted small">{{ project.description|truncatewords:15 }}</p>
+                                        <small class="text-muted">
+                                            {% if project.manager == user %}
+                                                <i class="fas fa-crown text-warning me-1"></i>Manager
+                                            {% else %}
+                                                <i class="fas fa-user me-1"></i>Member
+                                            {% endif %}
+                                            • {{ project.created_at|timesince }} ago
+                                        </small>
+                                    </div>
+                                    <span class="badge bg-{{ project.is_active|yesno:'success,secondary' }}">
+                                        {{ project.is_active|yesno:'Active,Inactive' }}
+                                    </span>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <p class="text-muted">This user is not involved in any projects.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="d-flex gap-2">
+            <a href="{% url 'user_list' %}" class="btn btn-secondary">
+                <i class="fas fa-arrow-left me-2"></i>Back to Users
+            </a>
+            {% if user == request.user %}
+                <a href="{% url 'profile' %}" class="btn btn-primary">
+                    <i class="fas fa-edit me-2"></i>Edit Profile
+                </a>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

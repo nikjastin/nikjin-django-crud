@@ -1,0 +1,140 @@
+{% extends 'base.html' %}
+
+{% block title %}Projects - NikJin CRUD{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1 class="h2 mb-0">
+        <i class="fas fa-project-diagram me-2 text-info"></i>Project Management
+    </h1>
+    <a href="{% url 'project_create' %}" class="btn btn-success">
+        <i class="fas fa-plus me-2"></i>Create New Project
+    </a>
+</div>
+
+<!-- Search -->
+<div class="card mb-4">
+    <div class="card-body">
+        <form method="get" class="row g-3">
+            <div class="col-md-10">
+                <input type="text" class="form-control" name="search" 
+                       placeholder="Search projects..." value="{{ search_query }}">
+            </div>
+            <div class="col-md-2">
+                <button type="submit" class="btn btn-primary w-100">
+                    <i class="fas fa-search me-1"></i>Search
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Projects List -->
+<div class="card">
+    <div class="card-body">
+        {% if page_obj %}
+            <div class="row">
+                {% for project in page_obj %}
+                    <div class="col-md-6 col-lg-4 mb-4">
+                        <div class="card h-100">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between align-items-start mb-3">
+                                    <h5 class="card-title">
+                                        <a href="{% url 'project_detail' project.pk %}" class="text-decoration-none">
+                                            {{ project.name }}
+                                        </a>
+                                    </h5>
+                                    <span class="badge bg-{{ project.is_active|yesno:'success,secondary' }}">
+                                        {{ project.is_active|yesno:'Active,Inactive' }}
+                                    </span>
+                                </div>
+                                
+                                <p class="card-text text-muted">{{ project.description|truncatewords:20 }}</p>
+                                
+                                <div class="mb-3">
+                                    <small class="text-muted">
+                                        <i class="fas fa-user me-1"></i>Manager: 
+                                        <a href="{% url 'user_detail' project.manager.pk %}" class="text-decoration-none">
+                                            {{ project.manager.get_full_name|default:project.manager.username }}
+                                        </a>
+                                    </small>
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <small class="text-muted">
+                                        <i class="fas fa-users me-1"></i>{{ project.members.count }} member{{ project.members.count|pluralize }}
+                                    </small>
+                                </div>
+                                
+                                {% if project.deadline %}
+                                    <div class="mb-3">
+                                        <small class="text-muted">
+                                            <i class="fas fa-calendar-alt me-1"></i>Due: {{ project.deadline|date:"M d, Y" }}
+                                        </small>
+                                    </div>
+                                {% endif %}
+                            </div>
+                            <div class="card-footer">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <small class="text-muted">{{ project.created_at|timesince }} ago</small>
+                                    <div class="btn-group btn-group-sm">
+                                        <a href="{% url 'project_detail' project.pk %}" class="btn btn-outline-info">
+                                            <i class="fas fa-eye"></i>
+                                        </a>
+                                        <a href="{% url 'project_update' project.pk %}" class="btn btn-outline-warning">
+                                            <i class="fas fa-edit"></i>
+                                        </a>
+                                        <a href="{% url 'project_delete' project.pk %}" class="btn btn-outline-danger">
+                                            <i class="fas fa-trash"></i>
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+
+            <!-- Pagination -->
+            {% if page_obj.has_other_pages %}
+                <nav aria-label="Projects pagination">
+                    <ul class="pagination justify-content-center">
+                        {% if page_obj.has_previous %}
+                            <li class="page-item">
+                                <a class="page-link" href="?page=1{% if search_query %}&search={{ search_query }}{% endif %}">First</a>
+                            </li>
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}">Previous</a>
+                            </li>
+                        {% endif %}
+
+                        <li class="page-item active">
+                            <span class="page-link">
+                                Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}
+                            </span>
+                        </li>
+
+                        {% if page_obj.has_next %}
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}">Next</a>
+                            </li>
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}{% if search_query %}&search={{ search_query }}{% endif %}">Last</a>
+                            </li>
+                        {% endif %}
+                    </ul>
+                </nav>
+            {% endif %}
+        {% else %}
+            <div class="text-center py-5">
+                <i class="fas fa-project-diagram fa-3x text-muted mb-3"></i>
+                <h4>No projects found</h4>
+                <p class="text-muted">Create your first project to get started.</p>
+                <a href="{% url 'project_create' %}" class="btn btn-success">
+                    <i class="fas fa-plus me-2"></i>Create Project
+                </a>
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
